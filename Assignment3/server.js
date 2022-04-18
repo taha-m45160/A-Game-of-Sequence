@@ -413,10 +413,10 @@ wss.on(`connection`, (ws) => {
         client.send(JSON.stringify(message7))
         client.send(JSON.stringify(message3))
       })
+    } else {
+      wss.clients.forEach((client) => {
+        client.send(JSON.stringify(message3))
+      })
     }
-
-    wss.clients.forEach((client) => {
-      client.send(JSON.stringify(message3))
-    })
   })
 })
