@@ -147,6 +147,7 @@ const positionBoard = [
   ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-"],
 ];
 
+
 const deck = [
   "card rank-a spades",
   "card rank-2 spades",
@@ -233,6 +234,9 @@ function randomInteger(min, max) {
 // check if someone has won
 function bingoPrime(x, y, arr, color) {
   // row-wise
+  let xIdx
+  let yIdx
+
   for (let i = x; i < x + 5; i++) {
     let bing = true
     for (let j = y; j < y + 5; j++) {
@@ -240,10 +244,12 @@ function bingoPrime(x, y, arr, color) {
         bing = false
         break
       }
+      xIdx = i
+      yIdx = j
     }
 
     if (bing) {
-      return arr[i][y]
+      return arr[xIdx][yIdx]
     }
   }
 
@@ -255,55 +261,65 @@ function bingoPrime(x, y, arr, color) {
         bing = false
         break
       }
+      xIdx = j
+      yIdx = i
     }
 
     if (bing) {
-      return arr[x][i]
+      return arr[xIdx][yIdx]
     }
   }
 
   let bing = true
-  // diagonally l-r
-  for (let i = x; i < x + 5; i++) {
-    if (arr[i][i] == "-" | arr[i][i] == color) {
+  // // diagonally l-r
+  let i = x, j = y, k = 0
+  while (k < 5) {
+    if (arr[i][j] == "-" | arr[i][j] == color) {
       bing = false
       break
     }
-  }
 
-  if (bing) {
-    return arr[x][x]
-  }
-
-  // diagonally r-l
-  for (let i = x + 4; i >= 0; i--) {
-    if (arr[i][i] == "-" | arr[i][i] == color) {
-      break
+    if (++k != 5) {
+      i++
+      j++
     }
   }
 
   if (bing) {
-    return arr[x + 4][x + 4]
+    return arr[i][j]
   }
 
-  return -1
+  // // diagonally r-l
+  i = x, j = y + 4, k = 0
+  while (k < 5) {
+    if (arr[i][j] == "-" | arr[i][j] == color) {
+      return -1
+    }
+
+    if (++k != 5) {
+      i++
+      j--
+    }
+  }
+
+  return arr[i][j]
 }
 
 const bingo = (arr) => {
   for (let i = 0; i < arr.length - 4; i++) {
-      for (let j = 0; j < arr.length - 4; j++) {
-          let green = bingoPrime(i, j, arr, 'blue')
+    for (let j = 0; j < arr.length - 4; j++) {
+      let green = bingoPrime(i, j, arr, 'blue')
 
-          if (green != -1) {
-              return green
-          }
-
-          let blue = bingoPrime(i, j, arr, 'green')
-
-          if (blue != -1) {
-              return blue
-          }
+      if (green != -1) {
+        return green
       }
+
+      let blue = bingoPrime(i, j, arr, 'green')
+
+      if (blue != -1) {
+        return blue
+      }
+    }
   }
 
   return -1
@@ -332,10 +348,12 @@ server.listen(8000);
 // creating a web socket
 const wss = new WebSocket.Server({ port: 8080 });
 
+let turnCount = 0
+
 wss.on(`connection`, (ws) => {
   const color = wss.clients.size % 2 ? 'green' : 'blue'
   const name = `${wss.clients.size}`
-  
+
   const message1 = {
     type: `newboard`,
     me: name,
@@ -353,6 +371,7 @@ wss.on(`connection`, (ws) => {
     deck: deck,
     cards: piece[wss.clients.size - 1]
   }
+
   ws.send(JSON.stringify(message2))
 
   if (wss.clients.size == 4) {
@@ -369,13 +388,31 @@ wss.on(`connection`, (ws) => {
   ws.on(`message`, (m) => {
     const msg = JSON.parse(m)
     positionBoard[msg.position[0]][msg.position[1]] = color
-    const check = bingo(positionBoard)
+    let check = bingo(positionBoard)
+    turnCount++
+
+    if (turnCount == 72) {
+      check = "draw"
+    }
 
     const message3 = {
       type: `updatepb`,
       positionBoard: positionBoard,
       turn: msg.turn,
       status: check
+    }
+    
+    const message7 = {
+      type: `newdeck`,
+      deck: deck,
+      cards: piece[parseInt(name) + 3]
+    }
+
+    if (turnCount == 36) {
+      wss.clients.forEach((client) => {
+        client.send(JSON.stringify(message7))
+        client.send(JSON.stringify(message3))
+      })
     }
 
     wss.clients.forEach((client) => {

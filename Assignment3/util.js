@@ -1,117 +1,104 @@
+// check if someone has won
 function bingoPrime(x, y, arr, color) {
   // row-wise
+  let xIdx
+  let yIdx
+
   for (let i = x; i < x + 5; i++) {
     let bing = true
-    let xy = -1
-
     for (let j = y; j < y + 5; j++) {
       if (arr[i][j] == "-" | arr[i][j] == color) {
         bing = false
         break
       }
-
-      if (j + 1 < y + 5) {
-        xy = j
-      }
+      xIdx = i
+      yIdx = j
     }
 
     if (bing) {
-      return arr[i][xy]
+      return arr[xIdx][yIdx]
     }
   }
 
   // column-wise
   for (let i = x; i < x + 5; i++) {
     let bing = true
-    let xy = -1
-
     for (let j = y; j < y + 5; j++) {
       if (arr[j][i] == "-" | arr[j][i] == color) {
         bing = false
         break
       }
-
-      if (j + 1 < y + 5) {
-        xy = j
-      }
+      xIdx = j
+      yIdx = i
     }
 
     if (bing) {
-      return arr[i][xy]
+      return arr[xIdx][yIdx]
     }
   }
 
   let bing = true
-  let xy = -1
-  // diagonally l-r
-  for (let i = x; i < x + 5; i++) {
-    if (arr[i][i] == "-" | arr[i][i] == color) {
+  // // diagonally l-r
+  let i = x, j = y, k = 0
+  while (k < 5) {
+    if (arr[i][j] == "-" | arr[i][j] == color) {
       bing = false
       break
     }
-
-    if (i == x + 4) {
-      xy = i
+    
+    if (++k != 5) {
+      i++
+      j++
     }
   }
 
   if (bing) {
-    return arr[xy][xy]
+    return arr[i][j]
   }
 
-  bing = true
-  xy = -1
-  // diagonally r-l
-  for (let i = x, j = y; i < x + 5 & j < y + 5; i++) {
-    console.log(i, (y + 5) - i)
-    console.log(arr[i][(y + 5) - i])
-    if (arr[i][(y + 5) - i] == "-" | arr[i][(y + 5) - i] == color) {
-      console.log('f', i)
-      bing = false
-      break
+  // // diagonally r-l
+  i = x, j = y + 4, k = 0
+  while (k < 5) {
+    if (arr[i][j] == "-" | arr[i][j] == color) {
+      return -1
     }
-
-    if (i == x + 4) {
-      xy = i
+    
+    if (++k != 5) {
+      i++
+      j--
     }
   }
 
-  if (bing) {
-    return arr[xy][y + 5 - xy]
-  }
-
-  return -1
+  return arr[i][j]
 }
 
 const bingo = (arr) => {
   for (let i = 0; i < arr.length - 4; i++) {
-    for (let j = 0; j < arr.length - 4; j++) {
-      console.log("in", i, j)
-      let g = bingoPrime(i, j, arr, 'b')
-      console.log("out", i, j)
+      for (let j = 0; j < arr.length - 4; j++) {
+          let green = bingoPrime(i, j, arr, 'b')
 
-      if (g != -1) {
-        return g
+          if (green != -1) {
+              return green
+          }
+
+          let blue = bingoPrime(i, j, arr, 'g')
+
+          if (blue != -1) {
+              return blue
+          }
       }
-
-      // const b = bingoPrime(i, j, arr, 'g')
-
-      // if (b != -1) {
-      //   return b
-      // }
-    }
   }
 
   return -1
 }
 
 const arr = [
-  ['b', '-', 'g', 'g', 'g', 'g'],
+  ['g', 'b', 'b', 'g', 'g', 'b'],
   ['g', 'b', 'b', 'b', 'b', 'g'],
   ['g', '-', 'b', 'b', 'g', 'b'],
-  ['g', 'b', 'g', 'g', '-', 'g'],
-  ['g', 'b', 'g', 'b', 'b', 'b'],
-  ['-', 'b', '-', '-', 'b', 'g']
+  ['g', 'b', 'b', 'g', 'b', 'g'],
+  ['b', '-', '-', 'b', 'b', 'b'],
+  ['-', 'g', '-', '-', 'b', 'g']
 ]
 
 console.log(bingo(arr))

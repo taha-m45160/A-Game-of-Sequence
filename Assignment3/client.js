@@ -33,9 +33,13 @@ const Sequence = () => {
     } else if (msg.type === `updatepb`) {
       setPositionBoard(msg.positionBoard)
 
-      if (msg.status !== -1) {
+      if (msg.status === "draw") {
         setEndGame(true)
-        setText(`Game Ended. ${msg.status} won.`)
+        setText(`Game Drawn.`)
+        
+      } else if (msg.status !== -1) {
+        setEndGame(true)
+        setText(`Game Ended. Team ${msg.status} won.`)
       
       } else {
         setTurn(msg.turn)
@@ -47,8 +51,6 @@ const Sequence = () => {
       setTurn(msg.firstTurn)
       setText(`Game started. ${msg.firstTurn} to move.`)
     
-    } else if (msg.type === `gameend`) {
-
     }
   };
 
@@ -146,7 +148,7 @@ const Sequence = () => {
       } else {
         setText('Illegal. Move Again.')
       }
-    } else if (startGame & turn != me) {
+    } else if (startGame & turn != me & !endGame) {
       setText(`Please wait for your turn. Player ${turn} to move.`)
     
     } else if (endGame) {
